@@ -1,0 +1,45 @@
+{
+  "name": "Share My Location",
+  "short_name": "ShareLoc",
+  "description": "Share your live location without saving contacts",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F7FA",
+  "theme_color": "#1E88E5",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Share Current Location",
+      "short_name": "Share Now",
+      "description": "Quickly grab and share current GPS coordinates",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
