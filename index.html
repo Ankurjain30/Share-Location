@@ -93,7 +93,7 @@
         .btn-share { color: #1E88E5; background: #ffffff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Install / Add to Home Screen Modal Overlay */
+        /* Modal Overlay Styles (used for both Install and Error modals) */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -104,7 +104,7 @@
             background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(3px);
             z-index: 1000;
-            align-items: center; /* Centers the modal perfectly */
+            align-items: center; /* Centers the modal vertically */
             justify-content: center;
             padding: 20px;
         }
@@ -189,13 +189,29 @@
         <div class="modal-card">
             <div class="modal-header">
                 <span class="modal-title" id="modalTitleText">Install App</span>
-                <button id="modalCloseBtn" class="modal-close">&times;</button>
+                <button id="modalCloseBtn" class="modal-close" onclick="document.getElementById('installModal').style.display='none'">&times;</button>
             </div>
             <div id="installInstructions" class="modal-body">
-                <!-- Dynamically populated by app.js based on Chrome/Safari detection -->
+                <!-- Dynamically populated by app.js -->
             </div>
             <div class="modal-actions">
                 <button id="installActionBtn" class="btn btn-share">Install</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Error Modal -->
+    <div id="errorModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span class="modal-title" style="color: #E53935;">Location Blocked</span>
+                <button class="modal-close" onclick="document.getElementById('errorModal').style.display='none'">&times;</button>
+            </div>
+            <div id="errorInstructions" class="modal-body">
+                <!-- Dynamically populated by app.js -->
+            </div>
+            <div class="modal-actions">
+                <button onclick="location.reload()" class="btn btn-share" style="background: #E53935; border-color: #E53935; color: white;">I've Fixed It (Reload)</button>
             </div>
         </div>
     </div>

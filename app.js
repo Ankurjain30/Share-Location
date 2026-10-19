@@ -1,3 +1,4 @@
+// --- Global Variables & Device Detection ---
 let latitude = 0.0;
 let longitude = 0.0;
 let shareMessage = "";
@@ -11,6 +12,11 @@ const accuracyText = document.getElementById("accuracyText");
 const progressBar = document.getElementById("progressBar");
 const positiveBtn = document.getElementById("positive");
 
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isChromeMobile = () => /Android.*Chrome/.test(navigator.userAgent);
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+// --- Location Logic ---
 function initLocation() {
     if (!navigator.geolocation) {
         addressText.innerText = "Geolocation is not supported by your browser";
@@ -18,15 +24,37 @@ function initLocation() {
         return;
     }
 
-    // Automatically triggers the browser's native location permission prompt
     navigator.geolocation.watchPosition(
         (position) => {
             updateLocationData(position);
         },
         (error) => {
             progressBar.style.display = "none";
-            addressText.innerText = "Location Permission Denied or Unavailable";
-            coordsText.innerText = error.message;
+            
+            if (error.code === error.PERMISSION_DENIED || error.code === error.POSITION_UNAVAILABLE) {
+                addressText.innerText = "Permission Denied";
+                coordsText.innerText = "Tap the button below for instructions.";
+                
+                const errorModal = document.getElementById('errorModal');
+                const errorInstructions = document.getElementById('errorInstructions');
+                
+                if (isIOS()) {
+                    errorInstructions.innerHTML = `Your iPhone is blocking this browser from using GPS.<br><br>
+                    <b>1.</b> Open your iPhone <b>Settings</b> app.<br>
+                    <b>2.</b> Scroll down to <b>Chrome</b> (or Safari).<br>
+                    <b>3.</b> Tap <b>Location</b> and select <span class="icon-badge">While Using the App</span>. Ensure <b>Precise Location</b> is ON.`;
+                } else {
+                    errorInstructions.innerHTML = `Your device is blocking location access.<br><br>
+                    <b>1.</b> Tap the <b>Lock icon</b> in the address bar above.<br>
+                    <b>2.</b> Tap <b>Permissions</b> or <b>Site Settings</b>.<br>
+                    <b>3.</b> Set Location to <span class="icon-badge">Allow</span>.`;
+                }
+                
+                errorModal.style.display = 'flex';
+            } else if (error.code === error.TIMEOUT) {
+                addressText.innerText = "Location Timeout";
+                coordsText.innerText = "It took too long to get a GPS signal. Are you indoors?";
+            }
         },
         {
             enableHighAccuracy: true,
@@ -111,16 +139,7 @@ let deferredPrompt = null;
 const installModal = document.getElementById('installModal');
 const installInstructions = document.getElementById('installInstructions');
 const installActionBtn = document.getElementById('installActionBtn');
-const modalCloseBtn = document.getElementById('modalCloseBtn');
 const modalTitleText = document.getElementById('modalTitleText');
-
-const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-const isChromeMobile = () => /Android.*Chrome/.test(navigator.userAgent);
-const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-modalCloseBtn.onclick = () => {
-    installModal.style.display = 'none';
-};
 
 function checkInstallPrompts() {
     if (isStandalone()) return;
@@ -180,7 +199,7 @@ function checkInstallPrompts() {
     }, 2000);
 }
 
-// Unified window load listener
+// --- Unified Initialization ---
 window.addEventListener('load', () => {
     initLocation();
     checkInstallPrompts();
