@@ -1,5 +1,5 @@
 // --- Version Control for Testing ---
-const CURRENT_VERSION = "v1.5 (Build 2026-10-19)";
+const CURRENT_VERSION = "v1.6 (Build 2026-10-19)";
 
 window.addEventListener('DOMContentLoaded', () => {
     const versionEl = document.getElementById("appVersionDisplay");
@@ -15,7 +15,7 @@ let shareMessage = "";
 let clickableText = "";
 let lastFetchedLat = null;
 let lastFetchedLon = null;
-let watchId = null; // Global tracking ID used by the index.html stopApp() function
+let watchId = null; 
 
 const addressText = document.getElementById("addressText");
 const coordsText = document.getElementById("dialogtext");
@@ -36,7 +36,6 @@ function initLocation() {
         return;
     }
 
-    // Always clear any stuck/frozen GPS trackers before starting a new one
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
@@ -77,7 +76,7 @@ function initLocation() {
         {
             enableHighAccuracy: true,
             timeout: 15000,
-            maximumAge: 0 // Forces fresh GPS data, bypassing browser cache
+            maximumAge: 0
         }
     );
 }
@@ -85,13 +84,11 @@ function initLocation() {
 // --- PWA Lifecycle Fix: Unfreeze GPS when returning to the app ---
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === 'visible') {
-        // App is visible again: Restart the GPS tracker
         if (addressText.innerText !== "Permission Denied") {
             addressText.innerText = "Refreshing location...";
             initLocation();
         }
     } else {
-        // App is hidden (backgrounded): Pause the tracker to save battery and prevent lockups
         if (watchId !== null) {
             navigator.geolocation.clearWatch(watchId);
             watchId = null;
@@ -109,7 +106,6 @@ function updateLocationData(position) {
     
     accuracyText.style.display = "block";
     
-    // Smart Accuracy Indicator
     if (accuracy > 100) {
         accuracyText.style.color = "#FF9800";
         accuracyText.innerText = `Accuracy: ±${accuracy}m (Warming up GPS...)`;
@@ -118,12 +114,14 @@ function updateLocationData(position) {
         accuracyText.innerText = `Accuracy: ±${accuracy} meters`;
     }
 
+    // Clean Share Message: Only Google Maps link is shared now
+    shareMessage = `Here is my live location: ${clickableText}`;
+
     progressBar.style.display = "none";
     positiveBtn.removeAttribute("disabled");
     positiveBtn.innerText = "Share";
     positiveBtn.onclick = triggerShare;
 
-    // Fetch new address only if moved more than ~10 meters
     if (!lastFetchedLat || !lastFetchedLon || calculateDistance(lastFetchedLat, lastFetchedLon, latitude, longitude) > 0.01) {
         lastFetchedLat = latitude;
         lastFetchedLon = longitude;
@@ -152,15 +150,12 @@ function fetchAddress(lat, lon) {
         .then(data => {
             if (data && data.display_name) {
                 addressText.innerText = data.display_name;
-                shareMessage = `It's easily share your location without saving the person's contact:\n${data.display_name}\n\nLive Location Link: ${clickableText}`;
             } else {
-                addressText.innerText = "Unknown Address";
-                shareMessage = `It's easily share your location without saving the person's contact: ${clickableText}`;
+                addressText.innerText = "Coordinates acquired";
             }
         })
         .catch(() => {
             addressText.innerText = "Coordinates acquired";
-            shareMessage = `It's easily share your location without saving the person's contact: ${clickableText}`;
         })
         .finally(() => {
             disclaimerText.style.display = "block";
@@ -175,7 +170,7 @@ function triggerShare() {
         }).catch((error) => console.log('Sharing canceled or failed', error));
     } else {
         navigator.clipboard.writeText(shareMessage).then(() => {
-            alert("Location details copied to clipboard!");
+            alert("Location link copied to clipboard!");
         });
     }
 }
