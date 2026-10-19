@@ -1,3 +1,13 @@
+// --- Version Control for Testing ---
+const CURRENT_VERSION = "v1.5 (Build 2026-10-19)";
+
+window.addEventListener('DOMContentLoaded', () => {
+    const versionEl = document.getElementById("appVersionDisplay");
+    if (versionEl) {
+        versionEl.innerText = `Version: ${CURRENT_VERSION}`;
+    }
+});
+
 // --- Global Variables & Device Detection ---
 let latitude = 0.0;
 let longitude = 0.0;
@@ -5,14 +15,13 @@ let shareMessage = "";
 let clickableText = "";
 let lastFetchedLat = null;
 let lastFetchedLon = null;
-let watchId = null; // Tracks the active GPS session
+let watchId = null; // Global tracking ID used by the index.html stopApp() function
 
 const addressText = document.getElementById("addressText");
 const coordsText = document.getElementById("dialogtext");
 const accuracyText = document.getElementById("accuracyText");
 const progressBar = document.getElementById("progressBar");
 const positiveBtn = document.getElementById("positive");
-const negativeBtn = document.getElementById("negative"); // Added Cancel button reference
 const disclaimerText = document.getElementById("disclaimerText");
 
 const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -27,7 +36,12 @@ function initLocation() {
         return;
     }
 
-    // watchPosition automatically fires every time the user's physical location changes
+    // Always clear any stuck/frozen GPS trackers before starting a new one
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+
     watchId = navigator.geolocation.watchPosition(
         (position) => {
             updateLocationData(position);
@@ -63,10 +77,27 @@ function initLocation() {
         {
             enableHighAccuracy: true,
             timeout: 15000,
-            maximumAge: 0
+            maximumAge: 0 // Forces fresh GPS data, bypassing browser cache
         }
     );
 }
+
+// --- PWA Lifecycle Fix: Unfreeze GPS when returning to the app ---
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'visible') {
+        // App is visible again: Restart the GPS tracker
+        if (addressText.innerText !== "Permission Denied") {
+            addressText.innerText = "Refreshing location...";
+            initLocation();
+        }
+    } else {
+        // App is hidden (backgrounded): Pause the tracker to save battery and prevent lockups
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+    }
+});
 
 function updateLocationData(position) {
     latitude = position.coords.latitude;
@@ -78,6 +109,7 @@ function updateLocationData(position) {
     
     accuracyText.style.display = "block";
     
+    // Smart Accuracy Indicator
     if (accuracy > 100) {
         accuracyText.style.color = "#FF9800";
         accuracyText.innerText = `Accuracy: ±${accuracy}m (Warming up GPS...)`;
@@ -91,6 +123,7 @@ function updateLocationData(position) {
     positiveBtn.innerText = "Share";
     positiveBtn.onclick = triggerShare;
 
+    // Fetch new address only if moved more than ~10 meters
     if (!lastFetchedLat || !lastFetchedLon || calculateDistance(lastFetchedLat, lastFetchedLon, latitude, longitude) > 0.01) {
         lastFetchedLat = latitude;
         lastFetchedLon = longitude;
@@ -146,28 +179,6 @@ function triggerShare() {
         });
     }
 }
-
-// --- App Shutdown Logic ---
-negativeBtn.onclick = () => {
-    // 1. Immediately turn off the GPS hardware tracking
-    if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-    }
-    
-    // 2. Attempt to force-close the window
-    window.close();
-    
-    // 3. Fallback screen if the OS blocks window.close()
-    document.body.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 24px; font-family: 'Space Grotesk', sans-serif;">
-            <div style="width: 64px; height: 64px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-                <span style="font-size: 24px; color: #757575;">✓</span>
-            </div>
-            <h3 style="color: #333; margin-bottom: 8px; font-size: 20px;">Tracking Stopped</h3>
-            <p style="color: #666; font-size: 15px; line-height: 1.5;">GPS location services are turned off. You can safely swipe away or close this app.</p>
-        </div>
-    `;
-};
 
 // --- Smart Device-Aware Install Prompt Logic ---
 let deferredPrompt = null;

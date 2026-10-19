@@ -6,43 +6,26 @@
     <meta name="theme-color" content="#F5F7FA">
     
     <!-- iOS / Apple Web Clip Support -->
-    To fix the layout so the buttons are always visible without scrolling, we need to implement **Dynamic Viewport Height (`100dvh`)** and slightly tighten the spacing. 
-
-Mobile browsers (especially Safari and Chrome) have expanding and collapsing address bars. Using standard `100vh` ignores those bars and pushes your bottom buttons off the screen. `100dvh` automatically recalculates the exact visible space and resizes your app instantly.
-
-Here is the fully optimized **`index.html`**. I have reduced the margins slightly, implemented `100dvh`, and protected the buttons from being squished.
-
-Replace your entire **`index.html`** with this:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#F5F7FA">
-    
-    <!-- iOS / Apple Web Clip Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ShareLoc">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
-    
-    <!-- Standard Favicon -->
     <link rel="icon" type="image/png" href="icon.png">
     
     <title>Share My Location</title>
     <link rel="manifest" href="manifest.json">
-    <link href="[https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap](https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap)" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        /* Modern fix for mobile browser toolbars */
+        /* Dynamic Viewport ensures buttons never hide behind Safari/Chrome toolbars */
         html, body {
             height: 100%;
-            height: 100dvh; /* Dynamic Viewport Height automatically adjusts for Safari/Chrome toolbars */
+            height: 100dvh; 
             width: 100%;
+            overflow: hidden;
         }
 
         body {
@@ -51,7 +34,6 @@ Replace your entire **`index.html`** with this:
             color: #333333;
             display: flex;
             flex-direction: column;
-            /* Slightly tighter padding to guarantee fit on small phones like iPhone SE */
             padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
         }
         
@@ -64,71 +46,29 @@ Replace your entire **`index.html`** with this:
             text-align: center;
             flex-grow: 1;
             justify-content: center;
-            overflow-y: auto; /* Allows content to scroll only if the screen is unusually tiny */
+            overflow-y: auto;
         }
         
-        .subtitle {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1E88E5;
-            line-height: 1.3;
-            margin-bottom: 16px;
-        }
-        
-        .icon { 
-            width: 64px; 
-            height: 64px; 
-            margin-bottom: 16px; 
-            border-radius: 16px;
-            object-fit: cover;
-        }
-        
+        .subtitle { font-size: 16px; font-weight: 700; color: #1E88E5; line-height: 1.3; margin-bottom: 16px; }
+        .icon { width: 64px; height: 64px; margin-bottom: 16px; border-radius: 16px; object-fit: cover; }
         .spinner {
-            width: 32px; height: 32px;
-            border: 4px solid rgba(0,0,0,0.1);
-            border-top: 4px solid #1E88E5;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 12px;
+            width: 32px; height: 32px; border: 4px solid rgba(0,0,0,0.1); border-top: 4px solid #1E88E5;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .address { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
         .coords { font-size: 13px; color: #666666; margin-bottom: 8px; }
         .accuracy { font-size: 12px; font-weight: 700; color: #4CAF50; display: none; margin-bottom: 8px; }
-        
-        .disclaimer {
-            font-size: 11px;
-            color: #888888;
-            max-width: 280px;
-            line-height: 1.4;
-            margin-top: 8px;
-            display: none; 
-        }
+        .disclaimer { font-size: 11px; color: #888888; max-width: 280px; line-height: 1.4; margin-top: 8px; display: none; }
 
-        .actions {
-            display: flex;
-            gap: 12px;
-            width: 100%;
-            margin-top: 16px;
-            flex-shrink: 0; /* Prevents buttons from ever shrinking or getting cut off */
-        }
+        .actions { display: flex; gap: 12px; width: 100%; margin-top: 16px; flex-shrink: 0; }
         
         .btn {
-            flex: 1;
-            height: 50px;
-            border: 2px solid #00897B;
-            border-radius: 8px;
-            background: transparent;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
+            flex: 1; height: 50px; border: 2px solid #00897B; border-radius: 8px;
+            background: transparent; font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+            font-weight: 700; text-transform: uppercase; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; text-decoration: none;
         }
         .btn-cancel { color: #757575; }
         .btn-share { color: #1E88E5; background: #ffffff; }
@@ -136,73 +76,22 @@ Replace your entire **`index.html`** with this:
 
         /* Modals */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(3px);
-            z-index: 1000;
-            align-items: center; 
-            justify-content: center;
-            padding: 20px;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); z-index: 1000;
+            align-items: center; justify-content: center; padding: 20px;
         }
         .modal-card {
-            background: #ffffff;
-            width: 100%;
-            max-width: 420px;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            animation: scaleIn 0.25s ease-out;
-            max-height: 85vh;
-            overflow-y: auto;
+            background: #ffffff; width: 100%; max-width: 420px; border-radius: 20px; padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); animation: scaleIn 0.25s ease-out;
+            max-height: 85vh; overflow-y: auto;
         }
-        @keyframes scaleIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-        .modal-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1E88E5;
-        }
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #757575;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
-        .modal-body {
-            font-size: 14px;
-            line-height: 1.6;
-            color: #444444;
-            margin-bottom: 20px;
-        }
-        .modal-body b {
-            color: #111111;
-        }
-        .icon-badge {
-            display: inline-block;
-            padding: 2px 6px;
-            background: #eeeeee;
-            border-radius: 4px;
-            font-weight: 700;
-        }
-        .modal-actions {
-            display: flex;
-            width: 100%;
-        }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .modal-title { font-size: 18px; font-weight: 700; color: #1E88E5; }
+        .modal-close { background: none; border: none; font-size: 24px; color: #757575; cursor: pointer; padding: 4px 8px; }
+        .modal-body { font-size: 14px; line-height: 1.6; color: #444444; margin-bottom: 20px; }
+        .icon-badge { display: inline-block; padding: 2px 6px; background: #eeeeee; border-radius: 4px; font-weight: 700; }
+        .modal-actions { display: flex; width: 100%; }
     </style>
 </head>
 <body>
@@ -218,30 +107,27 @@ Replace your entire **`index.html`** with this:
         <div id="addressText" class="address">Locating you...</div>
         <div id="dialogtext" class="coords">Fetching coordinates...</div>
         <div id="accuracyText" class="accuracy"></div>
-        
         <div id="disclaimerText" class="disclaimer">* Note: Street address estimation may vary, but the shared Live Location Link is 100% precise.</div>
     </div>
 
     <div class="actions">
+        <!-- Cancel button directly triggers the new inline shutdown script -->
         <button id="negative" class="btn btn-cancel" onclick="stopApp()">Cancel</button>
         <button id="positive" class="btn btn-share" disabled>Share</button>
     </div>
 
-    <!-- Install Modal -->
+    <!-- Modals -->
     <div id="installModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <span class="modal-title" id="modalTitleText">Install App</span>
-                <button id="modalCloseBtn" class="modal-close" onclick="document.getElementById('installModal').style.display='none'">&times;</button>
+                <button class="modal-close" onclick="document.getElementById('installModal').style.display='none'">&times;</button>
             </div>
             <div id="installInstructions" class="modal-body"></div>
-            <div class="modal-actions">
-                <button id="installActionBtn" class="btn btn-share">Install</button>
-            </div>
+            <div class="modal-actions"><button id="installActionBtn" class="btn btn-share">Install</button></div>
         </div>
     </div>
 
-    <!-- Error Modal -->
     <div id="errorModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -255,15 +141,12 @@ Replace your entire **`index.html`** with this:
         </div>
     </div>
 
-    <!-- Added ?v=1.1 to force browsers to bypass the cache and download the new code -->
- <script>
+    <!-- Inline Script for guaranteed Instant Shutdown Execution -->
+    <script>
         function stopApp() {
-            // 1. Stop the GPS tracking if it's active
             if (typeof watchId !== 'undefined' && watchId !== null) {
                 navigator.geolocation.clearWatch(watchId);
             }
-            
-            // 2. Immediately replace the screen with the "Turned Off" UI
             document.body.innerHTML = `
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; text-align: center; padding: 24px; font-family: 'Space Grotesk', sans-serif; background-color: #F5F7FA;">
                     <div style="width: 64px; height: 64px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
@@ -273,11 +156,15 @@ Replace your entire **`index.html`** with this:
                     <p style="color: #666; font-size: 15px; line-height: 1.5;">GPS location services are turned off.<br>You can safely close this app or swipe it away.</p>
                 </div>
             `;
-            
-            // 3. Attempt to close the window (Will work on Desktop, gracefully fail on iOS)
             setTimeout(() => { window.close(); }, 300);
         }
     </script>
-    <script src="app.js?v=2"></script>
+<header>
+        <h3>Share My Location</h3>
+        <!-- Visible Version Badge for Testing -->
+        <div id="appVersionDisplay" style="font-size: 11px; color: #888888; margin-top: 2px;">Version: Loading...</div>
+    </header>
+    <!-- Version string forces browser to download fresh JS and drop the cached version -->
+    <script src="app.js?v=5"></script>
 </body>
 </html>
