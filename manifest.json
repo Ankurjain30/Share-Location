@@ -1,6 +1,6 @@
 {
   "name": "Share My Location",
-  "short_name": "ShareLoc",
+  "short_name": "Share My Location",
   "description": "Share your live location without saving contacts",
   "start_url": "./index.html",
   "scope": "./",

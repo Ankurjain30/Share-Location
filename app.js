@@ -59,7 +59,7 @@ function initLocation() {
         {
             enableHighAccuracy: true,
             timeout: 15000,
-            maximumAge: 5000
+            maximumAge: 0 // FORCE the browser to ignore cached locations and fetch fresh GPS
         }
     );
 }
@@ -73,7 +73,15 @@ function updateLocationData(position) {
     coordsText.innerText = `Lat: ${latitude.toFixed(5)} | Lon: ${longitude.toFixed(5)}`;
     
     accuracyText.style.display = "block";
-    accuracyText.innerText = `Accuracy: ±${accuracy} meters`;
+    
+    // Smart Accuracy Indicator: Warn the user if the GPS is still searching for a tight lock
+    if (accuracy > 100) {
+        accuracyText.style.color = "#FF9800"; // Orange warning color
+        accuracyText.innerText = `Accuracy: ±${accuracy}m (Warming up GPS...)`;
+    } else {
+        accuracyText.style.color = "#4CAF50"; // Green success color
+        accuracyText.innerText = `Accuracy: ±${accuracy} meters`;
+    }
 
     progressBar.style.display = "none";
     positiveBtn.removeAttribute("disabled");
