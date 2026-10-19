@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#F5F7FA">
     
     <!-- iOS / Apple Web Clip Support -->
@@ -29,6 +29,7 @@
             flex-direction: column;
             justify-content: space-between;
             padding: 24px;
+            padding-bottom: env(safe-area-inset-bottom, 24px);
         }
         header { text-align: center; padding-top: 12px; }
         .content {
@@ -103,21 +104,24 @@
             background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(3px);
             z-index: 1000;
-            align-items: flex-end;
+            align-items: center; /* Centers the modal perfectly */
             justify-content: center;
+            padding: 20px;
         }
         .modal-card {
             background: #ffffff;
             width: 100%;
-            max-width: 480px;
-            border-radius: 16px 16px 0 0;
+            max-width: 420px;
+            border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-            animation: slideUp 0.3s ease-out;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: scaleIn 0.25s ease-out;
+            max-height: 85vh;
+            overflow-y: auto;
         }
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         .modal-header {
             display: flex;
@@ -136,6 +140,7 @@
             font-size: 24px;
             color: #757575;
             cursor: pointer;
+            padding: 4px 8px;
         }
         .modal-body {
             font-size: 14px;
@@ -183,11 +188,11 @@
     <div id="installModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <span class="modal-title">Install App</span>
+                <span class="modal-title" id="modalTitleText">Install App</span>
                 <button id="modalCloseBtn" class="modal-close">&times;</button>
             </div>
             <div id="installInstructions" class="modal-body">
-                <!-- Dynamically populated based on Android / iOS detection -->
+                <!-- Dynamically populated by app.js based on Chrome/Safari detection -->
             </div>
             <div class="modal-actions">
                 <button id="installActionBtn" class="btn btn-share">Install</button>
