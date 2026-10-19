@@ -1,4 +1,4 @@
-const CACHE_NAME = 'share-location-v2';
+const CACHE_NAME = 'share-location-v3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -8,7 +8,7 @@ const ASSETS_TO_CACHE = [
     'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap'
 ];
 
-// Install: Cache all core assets
+// Install: Cache all core assets and activate immediately
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
@@ -16,7 +16,7 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// Activate: Remove stale caches
+// Activate: Remove stale caches and take control immediately
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -32,26 +32,33 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch: Cache-first strategy for static assets
+// Fetch: NETWORK-FIRST strategy for maximum reliability during testing/updates
 self.addEventListener('fetch', (event) => {
     if (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('fonts.googleapis.com')) {
         return;
     }
 
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            return cachedResponse || fetch(event.request).then((networkResponse) => {
+        fetch(event.request)
+            .then((networkResponse) => {
+                // If network is available, fetch the latest file, update cache, and return it
                 return caches.open(CACHE_NAME).then((cache) => {
                     if (event.request.method === 'GET' && networkResponse.status === 200) {
                         cache.put(event.request, networkResponse.clone());
                     }
                     return networkResponse;
                 });
-            });
-        }).catch(() => {
-            if (event.request.headers.get('accept')?.includes('text/html')) {
-                return caches.match('./index.html');
-            }
-        })
+            })
+            .catch(() => {
+                // If offline, fallback to the cache
+                return caches.match(event.request).then((cachedResponse) => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    if (event.request.headers.get('accept')?.includes('text/html')) {
+                        return caches.match('./index.html');
+                    }
+                });
+            })
     );
 });

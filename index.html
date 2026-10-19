@@ -20,7 +20,6 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        /* Dynamic Viewport ensures buttons never hide behind Safari/Chrome toolbars */
         html, body {
             height: 100%;
             height: 100dvh; 
@@ -74,6 +73,15 @@
         .btn-share { color: #1E88E5; background: #ffffff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* Footer Version Style */
+        .footer-version {
+            text-align: center;
+            font-size: 11px;
+            color: #888888;
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+
         /* Modals */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -111,10 +119,12 @@
     </div>
 
     <div class="actions">
-        <!-- Cancel button directly triggers the new inline shutdown script -->
         <button id="negative" class="btn btn-cancel" onclick="stopApp()">Cancel</button>
         <button id="positive" class="btn btn-share" disabled>Share</button>
     </div>
+
+    <!-- Clean Version Footer (Title removed) -->
+    <div id="appVersionDisplay" class="footer-version">Version: Loading...</div>
 
     <!-- Modals -->
     <div id="installModal" class="modal-overlay">
@@ -159,12 +169,8 @@
             setTimeout(() => { window.close(); }, 300);
         }
     </script>
-<header>
-        <h3>Share My Location</h3>
-        <!-- Visible Version Badge for Testing -->
-        <div id="appVersionDisplay" style="font-size: 11px; color: #888888; margin-top: 2px;">Version: Loading...</div>
-    </header>
-    <!-- Version string forces browser to download fresh JS and drop the cached version -->
-    <script src="app.js?v=5"></script>
+
+    <!-- Bumped version tag to ?v=6 to force cache-busting -->
+    <script src="app.js?v=6"></script>
 </body>
 </html>
