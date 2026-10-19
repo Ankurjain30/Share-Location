@@ -5,12 +5,15 @@ let shareMessage = "";
 let clickableText = "";
 let lastFetchedLat = null;
 let lastFetchedLon = null;
+let watchId = null; // Tracks the active GPS session
 
 const addressText = document.getElementById("addressText");
 const coordsText = document.getElementById("dialogtext");
 const accuracyText = document.getElementById("accuracyText");
 const progressBar = document.getElementById("progressBar");
 const positiveBtn = document.getElementById("positive");
+const negativeBtn = document.getElementById("negative"); // Added Cancel button reference
+const disclaimerText = document.getElementById("disclaimerText");
 
 const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isChromeMobile = () => /Android.*Chrome/.test(navigator.userAgent);
@@ -24,7 +27,8 @@ function initLocation() {
         return;
     }
 
-    navigator.geolocation.watchPosition(
+    // watchPosition automatically fires every time the user's physical location changes
+    watchId = navigator.geolocation.watchPosition(
         (position) => {
             updateLocationData(position);
         },
@@ -59,7 +63,7 @@ function initLocation() {
         {
             enableHighAccuracy: true,
             timeout: 15000,
-            maximumAge: 0 // FORCE the browser to ignore cached locations and fetch fresh GPS
+            maximumAge: 0
         }
     );
 }
@@ -74,12 +78,11 @@ function updateLocationData(position) {
     
     accuracyText.style.display = "block";
     
-    // Smart Accuracy Indicator: Warn the user if the GPS is still searching for a tight lock
     if (accuracy > 100) {
-        accuracyText.style.color = "#FF9800"; // Orange warning color
+        accuracyText.style.color = "#FF9800";
         accuracyText.innerText = `Accuracy: ±${accuracy}m (Warming up GPS...)`;
     } else {
-        accuracyText.style.color = "#4CAF50"; // Green success color
+        accuracyText.style.color = "#4CAF50";
         accuracyText.innerText = `Accuracy: ±${accuracy} meters`;
     }
 
@@ -88,7 +91,6 @@ function updateLocationData(position) {
     positiveBtn.innerText = "Share";
     positiveBtn.onclick = triggerShare;
 
-    // Fetch new address only if moved more than ~10 meters
     if (!lastFetchedLat || !lastFetchedLon || calculateDistance(lastFetchedLat, lastFetchedLon, latitude, longitude) > 0.01) {
         lastFetchedLat = latitude;
         lastFetchedLon = longitude;
@@ -126,6 +128,9 @@ function fetchAddress(lat, lon) {
         .catch(() => {
             addressText.innerText = "Coordinates acquired";
             shareMessage = `It's easily share your location without saving the person's contact: ${clickableText}`;
+        })
+        .finally(() => {
+            disclaimerText.style.display = "block";
         });
 }
 
@@ -142,6 +147,28 @@ function triggerShare() {
     }
 }
 
+// --- App Shutdown Logic ---
+negativeBtn.onclick = () => {
+    // 1. Immediately turn off the GPS hardware tracking
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+    }
+    
+    // 2. Attempt to force-close the window
+    window.close();
+    
+    // 3. Fallback screen if the OS blocks window.close()
+    document.body.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 24px; font-family: 'Space Grotesk', sans-serif;">
+            <div style="width: 64px; height: 64px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                <span style="font-size: 24px; color: #757575;">✓</span>
+            </div>
+            <h3 style="color: #333; margin-bottom: 8px; font-size: 20px;">Tracking Stopped</h3>
+            <p style="color: #666; font-size: 15px; line-height: 1.5;">GPS location services are turned off. You can safely swipe away or close this app.</p>
+        </div>
+    `;
+};
+
 // --- Smart Device-Aware Install Prompt Logic ---
 let deferredPrompt = null;
 const installModal = document.getElementById('installModal');
@@ -152,7 +179,6 @@ const modalTitleText = document.getElementById('modalTitleText');
 function checkInstallPrompts() {
     if (isStandalone()) return;
 
-    // 1. Android / Desktop Chrome (Event-driven automated prompt)
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
@@ -172,15 +198,13 @@ function checkInstallPrompts() {
         };
     });
 
-    // 2. Dynamic Browser-Specific Instructions for iOS or Chrome Mobile Fallback
     setTimeout(() => {
-        if (installModal.style.display === 'flex') return; // Already triggered via event
+        if (installModal.style.display === 'flex') return;
 
         const hasPrompted = sessionStorage.getItem('app_prompt_shown');
         if (hasPrompted) return;
 
         if (isIOS()) {
-            // iOS Safari Instructions
             modalTitleText.innerText = "Add to Home Screen";
             installInstructions.innerHTML = `To install this app on your iPhone/iPad:<br><br>
                 1. Tap the <span class="icon-badge">Share</span> icon at the bottom.<br>
@@ -192,7 +216,6 @@ function checkInstallPrompts() {
             };
             installModal.style.display = 'flex';
         } else if (isChromeMobile()) {
-            // Android Chrome Manual Fallback
             modalTitleText.innerText = "Add to Home Screen";
             installInstructions.innerHTML = `To install this app in Chrome:<br><br>
                 1. Tap the menu icon (<span class="icon-badge">⋮</span>) at the top right.<br>
